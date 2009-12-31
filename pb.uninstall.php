@@ -25,6 +25,8 @@ http://www.bankofcanada.ca/
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
+
  
 if ( !pbox_check_capabilities() ) {
 	wp_die( __( 'You do not have sufficient permissions to access this page.', 'pb' ) );
@@ -36,8 +38,8 @@ global $wpdb;
 // building a safe deactivation URL
 $deactivate_url = get_bloginfo( 'url' ) . 
 							'/wp-admin/' . 
-							wp_nonce_url( 'plugins.php?action=deactivate&plugin=pb/pb.php', 
-													'deactivate-plugin_pb/pb.php' );
+							wp_nonce_url( 'plugins.php?action=deactivate&plugin=pbox/pb.php', 
+													'deactivate-plugin_pbox/pb.php' );
 ?>
 <div class="wrap">
 <div id="icon-themes" class="icon32"><br /></div>
@@ -101,7 +103,7 @@ if( class_exists( 'XWidgets' ) ) {
 ?>
 </ul>
 <p><?php _e( 'Make sure to backup your database before performing this operation.', 'pb' ) ?></p>
-<p><a onclick="return confirm('<?php _e( 'Are you sure you want to DELETE ALL PBOX DATA?', 'pb' ); ?>');" href="<?php echo wp_nonce_url( PBox::get_admin_url( 'pb/pb.uninstall.php','&action=remove_data' ), 'pbox-uninstall-delete' ); ?>"><?php _e( 'Deactivate plugin and <span style="color:red;">DELETE</span> PBox data', 'pb' );?></a></p>
+<p><a onclick="return confirm('<?php _e( 'Are you sure you want to DELETE ALL PBOX DATA?', 'pb' ); ?>');" href="<?php echo wp_nonce_url( PBox::get_admin_url( 'include_pbox_uninstall','&action=remove_data' ), 'pbox-uninstall-delete' ); ?>"><?php _e( 'Deactivate plugin and <span style="color:red;">DELETE</span> PBox data', 'pb' );?></a></p>
 </div>
 <?php
 }

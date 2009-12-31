@@ -2,8 +2,8 @@
 Contributors: bankofcanada
 Tags: widget, cms, content, formatting, links, menu, sidebar, style, template, text, theme
 Requires at least: 2.8
-Tested up to: 2.9 RC1
-Stable tag: 2.2
+Tested up to: 2.9
+Stable tag: 2.2.1
 
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
 

@@ -65,6 +65,7 @@ $box_title = stripslashes( PBox::get_title( $box_id ) );
 </div>
 <div class="wrap">
 <?
+
 if ( $action = $_REQUEST['action'] ) {
 	// Handling the edit view of new or existing PBoxes
 	$contents = PBox::get_contents( $box_id );
@@ -78,7 +79,7 @@ if ( $action = $_REQUEST['action'] ) {
 		?>
 		<div id="icon-themes" class="icon32"><br /></div>
 		<h2><?php printf( __( 'PBox Contents for %s (%d)', 'pb' ), '<span id="titleUpdate">'.$box_title.'</span>', $box_id); ?></h2>
-		<form action='<?php echo PBox::get_admin_url( 'pb/pb.manage.php', '' );?>' method='post' id='pboxUpdate'>
+		<form action='<?php echo PBox::get_admin_url( 'include_pbox_manage', '' );?>' method='post' id='pboxUpdate'>
 		<input type='hidden' id='pbox_action' name='action' value='edit_process' />
 		<input type='hidden' id='pbox_id'  name='box_id' value='<?php echo $box_id;?>' />
 		<p class='submit'>

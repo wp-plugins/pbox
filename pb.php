@@ -2,7 +2,7 @@
 /**
 Plugin Name: PBox
 Description: Customizable content widgets (presentation boxes) able to display posts, pages, links and plain text in a custom style.
-Version: 2.2
+Version: 2.2.1
 Author: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
 Author URI: http://www.bankofcanada.ca/
 */
@@ -45,11 +45,11 @@ add_action( 'delete_attachment', 'pb_attachment_deleted' );
 //updating the usage table when a WordPress link is deleted (admin end)
 add_action( 'delete_link', 'pb_link_deleted' );
 //checking request when it happens to avoid requests being sent multiple times (admin end)
-add_action('load-pb/pb.manage.php', 'pbox_admin_actions');
+add_action('load-pbox/pb.manage.php', 'pbox_admin_actions');
 //checking request for redirect to edit page
-add_action('load-pb/pb.manage.php', 'pb_edit_support');
+add_action('load-pbox/pb.manage.php', 'pb_edit_support');
 //modifying request for redirect to edit page from add_process
-add_action('load-pb/pb.edit.php', 'pb_add_support');
+add_action('load-pbox/pb.edit.php', 'pb_add_support');
 //modifying the pbox tables as necessary when changing content/order in individual boxes (admin end)
 add_action('wp_ajax_edit_process', 'pb_ajax_response', 10, 1);
 //adding the time for the last update of the css file
@@ -76,7 +76,7 @@ function pb_check_version() {
 	else {
 		//otherwise stop the activation request and deactivate
 		$active_plugins = get_option( 'active_plugins' );
-		$pbox_loc = array_search( 'pb/pb.php', $active_plugins );
+		$pbox_loc = array_search( 'pbox/pb.php', $active_plugins );
 		if( false !== $pbox_loc ) {
 			// remove PBox from the list of active plugins
 			unset( $active_plugins[$pbox_loc] );
@@ -84,8 +84,8 @@ function pb_check_version() {
 			unset( $_GET['activate'] );
 			// add it to the recently activated section with the correct info
 			$recently_activated = get_option( 'recently_activated' );
-			if( !isset( $recently_activated['pb/pb.php'] ) ) {
-				$recently_activated['pb/pb.php'] = time();
+			if( !isset( $recently_activated['pbox/pb.php'] ) ) {
+				$recently_activated['pbox/pb.php'] = time();
 				update_option( 'recently_activated', $recently_activated );
 			}
 			// kill the processing and report the error.
@@ -109,7 +109,7 @@ function pb_check_version() {
 * @return void
 */
 function pb_plugin_localization() {
-    load_plugin_textdomain( 'pb', '', dirname( plugin_basename( __FILE__ ) ) );
+    load_plugin_textdomain( 'pbox', '', dirname( plugin_basename( __FILE__ ) ) );
 }
 
 /*
@@ -121,7 +121,7 @@ function pb_plugin_localization() {
 * @return void
 */
 function pb_js() {
-	if ( preg_match( '/.*pb.*/', $_SERVER['REQUEST_URI'] ) ) {
+	if ( preg_match( '/.*pbox.*/', $_SERVER['REQUEST_URI'] ) ) {
 		// Include jQuery/Sortable for the PBox edit panel
 		wp_enqueue_script( 'jquery' );
 		wp_enqueue_script( 'jquery-ui-sortable' );
@@ -196,6 +196,18 @@ function pb_style_init() {
 	}
 }
 
+function include_pbox_manage() {
+	include(dirname(__FILE__)."/pb.manage.php");
+}
+
+function include_pbox_styles() {
+	include(dirname(__FILE__)."/pb.styles.php");
+}
+
+function include_pbox_uninstall() {
+	include(dirname(__FILE__)."/pb.uninstall.php");
+}
+
 /*
 * Builds PBox left menu for the admin side of things for
 * users who have the proper capabilities to edit PBoxes.
@@ -203,16 +215,22 @@ function pb_style_init() {
 * @return void
 */
 function pb_menu() {
+/*
+add_options_page("WP-Optimize", "WP-Optimize", 10, "WP-Optimize", "optimize_menu");
+    add_submenu_page("index.php", "WP-Optimize", "WP-Optimize", 10, "WP-Optimize", "optimize_menu");
+*/
 	if( pbox_check_capabilities() ) {
 		if ( function_exists( 'add_menu_page' ) ) {
-			add_object_page( __( 'Presentation Box Management' , 'pb' ), 'PBox', 5, 'pb/pb.manage.php' );
+			add_object_page( __( 'Presentation Box Management' , 'pb' ), 'PBox', 5, 'include_pbox_manage' , 'include_pbox_manage');
 		}
+		
 		if ( function_exists( 'add_submenu_page' ) ) {
-			add_submenu_page( 'pb/pb.manage.php', __( 'Manage PBoxes', 'pb' ), __( 'Manage PBoxes', 'pb' ), 5, 'pb/pb.manage.php' );
-			add_submenu_page( 'pb/pb.manage.php', __( 'PBox Styles', 'pb' ), __( 'PBox Styles', 'pb' ), 5, 'pb/pb.styles.php' );
-			add_submenu_page( 'pb/pb.manage.php', __( 'Uninstall PBox', 'pb' ), __( 'Uninstall PBox', 'pb' ), 5, 'pb/pb.uninstall.php' );
-			add_submenu_page( 'pb/pb.manage.php', '', '', 5, 'pb/pb.edit.php' );
+			add_submenu_page( 'include_pbox_manage', __( 'Manage PBoxes', 'pb' ), __( 'Manage PBoxes', 'pb' ), 5,  'include_pbox_manage' , 'include_pbox_manage');
+			add_submenu_page( 'include_pbox_manage', __( 'PBox Styles', 'pb' ), __( 'PBox Styles', 'pb' ), 5, 'include_pbox_styles' , 'include_pbox_styles' );
+			add_submenu_page( 'include_pbox_manage', __( 'Uninstall PBox', 'pb' ), __( 'Uninstall PBox', 'pb' ), 5, 'include_pbox_uninstall' , 'include_pbox_uninstall'  );
+			add_submenu_page( 'include_pbox_manage', '', '', 5, 'pbox/pb.edit.php' );
 		}
+		
 	}
 }
 
@@ -426,7 +444,7 @@ function pb_ajax_response() {
 */
 function pb_edit_support() {
 	if ( isset ( $_REQUEST['action'] ) && ( $_REQUEST['action'] == 'edit_view' || $_REQUEST['action'] == 'add_process' || $_REQUEST['action'] == 'edit_process' ) ) {
-		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pb/pb.edit.php', "&action=edit_process&box_id={$_REQUEST['box_id']}" ), 'pbox-box-edit' ) ) );
+		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pbox/pb.edit.php', "&action=edit_process&box_id={$_REQUEST['box_id']}" ), 'pbox-box-edit' ) ) );
 	}
 }
 
@@ -441,7 +459,7 @@ function pb_add_support() {
 		check_admin_referer( 'pbox-box-add' );
 		$box_id = PBox::create_box( $_REQUEST['box_title'] );
 		PBox::update_info( $box_id );
-		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pb/pb.edit.php', "&action=edit_view&box_id=$box_id" ), 'pbox-box-edit' )) );
+		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pbox/pb.edit.php', "&action=edit_view&box_id=$box_id" ), 'pbox-box-edit' )) );
 	}
 }
 
@@ -576,7 +594,7 @@ if( class_exists( 'WP_Widget' ) ) {
 			// Edit link, if there is a box_id to access for edit
 			if( PBox::get_box( $box_id ) != -1 || $box_id == 0 ) {
 				if( pbox_check_capabilities() && $box_id > 0 ) {
-					echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( "pb/pb.edit.php", "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a>";
+					echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( "pbox/pb.edit.php", "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a>";
 				}
 			} else {
 				printf( "<p><strong>NOTE:</strong> PBox %d does not exist. Please enter a valid PBox ID.</p>", $box_id );

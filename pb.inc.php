@@ -35,8 +35,8 @@ define( 'PBOX_TABLE', $wpdb->prefix . 'pbox' );
 define( 'PBOX_ITEM_TABLE', $wpdb->prefix . 'pbox_items' );
 define( 'PBOX_USAGE_TABLE', $wpdb->prefix . 'pbox_usage' );
 define( 'PBOX_STYLE_TABLE', $wpdb->prefix . 'pbox_styles' );
-define( 'PBOX_PLUGIN_DIR', ABSPATH . 'wp-content/plugins/pb/' );
-define( 'PBOX_PLUGIN_URL', get_bloginfo( 'wpurl' ) . '/wp-content/plugins/pb/' );
+define( 'PBOX_PLUGIN_DIR', ABSPATH . 'wp-content/plugins/pbox/' );
+define( 'PBOX_PLUGIN_URL', get_bloginfo( 'wpurl' ) . '/wp-content/plugins/pbox/' );
 
 define( 'POST', $wpdb->prefix . 'posts' );
 define( 'PBOX_TYPE_LINK', '1' );
@@ -71,7 +71,7 @@ class PBox {
 		`last_update_by` int(12) NOT NULL,
 		`last_update_time` int(12) NOT NULL,
 		PRIMARY KEY  (`pbox_id`)
-		) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
+		)  AUTO_INCREMENT=1;";
 		dbDelta( $sql );
 		// Generates table storing the content of each pbox ( {prefix}_pbox_items )
 		$sql = "CREATE TABLE `".PBOX_ITEM_TABLE."` (
@@ -80,7 +80,7 @@ class PBox {
 		content text NOT NULL,
 		sort_order int(10) NOT NULL,
 		callout_id int(3) NOT NULL DEFAULT '0'
-		) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
+		) ;";
 		dbDelta( $sql );
 		// Generates table storing relationships between pages, styles, slots and box ids ( {prefix}_pbox_usage )
 		$sql = "CREATE TABLE `".PBOX_USAGE_TABLE."` (
@@ -88,7 +88,7 @@ class PBox {
 		pbox_id bigint(18) NOT NULL,
 		slot_id int(3) NOT NULL,
 		style_id text NOT NULL
-		) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
+		) ;";
 		dbDelta( $sql );
 		// Generates table storing style information ( {prefix}_pbox_styles )
 		$sql = "CREATE TABLE  `".PBOX_STYLE_TABLE."` (
@@ -102,7 +102,7 @@ class PBox {
 		 `text_template` text NOT NULL,
 		 `below_items_template` text NOT NULL,
 		 PRIMARY KEY  (`style_id`)
-		) ENGINE=MyISAM DEFAULT CHARSET=latin1;";
+		) ;";
 		dbDelta( $sql );
 		// Inserting the initial default style.
 		$wpdb->query("insert into ".PBOX_STYLE_TABLE." VALUES ('Default-Style',
@@ -986,7 +986,7 @@ class PBox {
 		$box_id = $box_data['box_data']['pbox_id'];
 		$items = $box_data['items'];
 		if( pbox_check_capabilities() && $box_id > 0 ) {
-			echo "<p style='font-size:smaller;font-weight:bold'><a href='" . wp_nonce_url( 'wp-admin/'.self::get_admin_url( "pb/pb.edit.php", "&action=edit_view&box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit this PBox', 'pb' )."</a>";
+			echo "<p style='font-size:smaller;font-weight:bold'><a href='" . wp_nonce_url( 'wp-admin/'.self::get_admin_url( "pbox/pb.edit.php", "&action=edit_view&box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit this PBox', 'pb' )."</a>";
 		}
 		if ( is_array( $items ) || is_object( $items ) ) {
 			// Get the first item

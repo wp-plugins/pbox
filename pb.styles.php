@@ -213,7 +213,7 @@ if( isset( $_REQUEST['action'] ) ) {
 				</tbody>
 			</table>
 			<br />
-			<form method="post" action="<?php echo PBox::get_admin_url( 'pb/pb.styles.php', '&amp;action=edit_process&amp;style_id='.$style_id ); ?>">
+			<form method="post" action="<?php echo PBox::get_admin_url( 'include_pbox_styles', '&amp;action=edit_process&amp;style_id='.$style_id ); ?>">
 				<?php wp_nonce_field( 'pbox-style-editprocess' ); ?>
 				<h5><?php _e( 'HTML preceding PBox items', 'pb' );?></h5>
 				<textarea rows="10" cols="50" name="htmleditbox_top" id="htmleditbox_top"><?php echo ( isset( $style_data[1] ) ? $style_data[1] : '' ); ?></textarea>
@@ -277,7 +277,7 @@ if( isset( $_REQUEST['action'] ) ) {
 				<p><?php _e( '(NOTE: Please make sure that your CSS does not interfere with other stylesheets or PBox styles.)', 'pb' );?></p>
 				
 				<p class='submit'>
-					<input type='button' onclick="window.location='<?php echo PBox::get_admin_url( "pb/pb.styles.php", "" );?>';" value='<?php _e( '&laquo; Cancel', 'pb' );?>' />
+					<input type='button' onclick="window.location='<?php echo PBox::get_admin_url( "include_pbox_styles", "" );?>';" value='<?php _e( '&laquo; Cancel', 'pb' );?>' />
 					<input type='submit' value='<?php _e( 'Save Changes &raquo;', 'pb' );?>' class='button' />
 				</p>
 			</form>
@@ -294,7 +294,7 @@ if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'dele
 	<div id="icon-themes" class="icon32"><br /></div>
 	<h2><?php _e( 'PBox Styles', 'pb' );?></h2>
 	<h3><?php _e( 'Create New Style', 'pb' );?></h3>
-	<form action="<?php echo PBox::get_admin_url( 'pb/pb.styles.php', '&amp;action=add_style_process' );?>" method='post'>
+	<form action="<?php echo PBox::get_admin_url( 'include_pbox_styles', '&amp;action=add_style_process' );?>" method='post'>
 		<?php wp_nonce_field( "pbox-style-add" ); ?>
 		<p><?php _e( 'To create a new PBox style, enter the name of the new style below.', 'pb' );?></p>
 		<p><?php _e( 'Name:', 'pb' );?> <input type='text' name='style_name' /></p>
@@ -318,8 +318,8 @@ if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'dele
 		foreach ( (array) $styles as $style ) { ?>
 			<tr class="<?php echo $alternate ?>">
 				<td><?php echo $style['style_id'] ?></td>
-				<td><a href="<?php echo wp_nonce_url( PBox::get_admin_url( 'pb/pb.styles.php', "&amp;action=edit_view&style_id=".$style['style_id'] ), 'pbox-style-editview' ) ?>"><?php _e( 'Edit', 'pb' ) ?></a></td>
-				<td><a onclick="return confirm(' <?php echo __( 'Are you sure you want to delete this style?', 'pb' ) . "');\" href='" . wp_nonce_url( PBox::get_admin_url( 'pb/pb.styles.php', "&amp;action=delete_process&style_id=".$style['style_id'] ), 'pbox-style-delete' ) . "'>" . __( 'Delete', 'pb' ) ?></a></td>
+				<td><a href="<?php echo wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=edit_view&style_id=".$style['style_id'] ), 'pbox-style-editview' ) ?>"><?php _e( 'Edit', 'pb' ) ?></a></td>
+				<td><a onclick="return confirm(' <?php echo __( 'Are you sure you want to delete this style?', 'pb' ) . "');\" href='" . wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=delete_process&style_id=".$style['style_id'] ), 'pbox-style-delete' ) . "'>" . __( 'Delete', 'pb' ) ?></a></td>
 			</tr>
 			<?php
 			if ( $alternate == '' ) {
