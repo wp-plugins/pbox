@@ -1,6 +1,6 @@
 === PBox ===
-Contributors: bankofcanada, ncrawford
-Tags: presentation, widget, formatting, display, sidebar, style, template, text, theme, external content, images, links, posts, pages, media, custom, CSS
+Contributors: bankofcanada, ncrawford, jairus
+Tags: presentation, widget, formatting, display, sidebar, style, template, text, theme, external content, images, links, posts, pages, media, custom, CSS, CMS
 Requires at least: 2.8
 Tested up to: 2.9.2
 Stable tag: 2.3
