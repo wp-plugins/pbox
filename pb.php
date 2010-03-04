@@ -3,13 +3,12 @@
 Plugin Name: PBox
 Description: Customizable presentation widget to display posts, pages, external content, links, media images, and plain text in a customized style.
 Version: 2.3
-Author: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
+Author: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford, Jairus Pryor
 Author URI: http://www.bankofcanada.ca/
 Plugin URI: http://bankofcanada.wordpress.com/
 */
 
-/*  Copyright 2009 Bank of Canada (Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton)
-
+/*
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or

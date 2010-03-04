@@ -3,7 +3,7 @@
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
 2.3
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford, Jairus Pryor
 http://www.bankofcanada.ca/
 */
 
