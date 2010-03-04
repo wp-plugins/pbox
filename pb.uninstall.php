@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -38,8 +38,8 @@ global $wpdb;
 // building a safe deactivation URL
 $deactivate_url = get_bloginfo( 'url' ) . 
 							'/wp-admin/' . 
-							wp_nonce_url( 'plugins.php?action=deactivate&plugin=pbox/pb.php', 
-													'deactivate-plugin_pbox/pb.php' );
+							wp_nonce_url( 'plugins.php?action=deactivate&plugin='.PBOX_DIR_NAME.'pb.php', 
+													'deactivate-plugin_'.PBOX_DIR_NAME.'pb.php' );
 ?>
 <div class="wrap">
 <div id="icon-themes" class="icon32"><br /></div>
@@ -73,8 +73,8 @@ if ( isset( $_REQUEST['action'] ) ) {
 		}
 		
 		// Delete PBox style sheet
-		if( file_exists( PBox::get_theme_location() . '/pbox.css' ) ) {
-			unlink( PBox::get_theme_location() . '/pbox.css' );
+		if( file_exists( PBOX_CSS_LOC ) ) {
+			unlink( PBOX_CSS_LOC );
 		}
 		?>
 		<p><?php _e( 'All PBox data has been deleted. Please click the link below to deactivate the plugin.', 'pb' );?></p>

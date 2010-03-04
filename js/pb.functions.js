@@ -48,6 +48,12 @@ function item_content_prompt( content_id_num ) {
 	if ( selectbox.selectedIndex == 2 ) {
 		textbox.value = 'Enter text here';
 		selectbox2.style.display = 'none';
+	} else if ( selectbox.selectedIndex == 3 ) {
+		textbox.value = 'Enter URI here';
+		selectbox2.style.display = 'none';
+	} else if ( selectbox.selectedIndex == 4 ) {
+		textbox.value = 'Enter image ID here';
+		selectbox2.style.display = 'none';
 	} else {	
 		textbox.value = 'Enter ID here';
 		selectbox2.style.display = '';

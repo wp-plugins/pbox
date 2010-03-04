@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -31,17 +31,34 @@ global $box_data; // Used to store box data for use with the display functions
 
 // DEFINE CONSTANTS
 
+define( 'PBOX_CUR_VERSION', '2.2.2' );
 define( 'PBOX_TABLE', $wpdb->prefix . 'pbox' );
 define( 'PBOX_ITEM_TABLE', $wpdb->prefix . 'pbox_items' );
 define( 'PBOX_USAGE_TABLE', $wpdb->prefix . 'pbox_usage' );
 define( 'PBOX_STYLE_TABLE', $wpdb->prefix . 'pbox_styles' );
-define( 'PBOX_PLUGIN_DIR', ABSPATH . 'wp-content/plugins/pbox/' );
-define( 'PBOX_PLUGIN_URL', get_bloginfo( 'wpurl' ) . '/wp-content/plugins/pbox/' );
+define ('PBOX_DIR_NAME', str_replace(basename(__FILE__), '', plugin_basename(__FILE__)) ); // ex: pbox/
+define( 'PBOX_PLUGIN_DIR', ABSPATH . 'wp-content/plugins/'.PBOX_DIR_NAME );
+define( 'PBOX_PLUGIN_URL', get_bloginfo( 'wpurl' ) . '/wp-content/plugins/'.PBOX_DIR_NAME );
+
+if ( get_option('pbox_style_in_theme') == 'y')
+{
+	define( 'PBOX_STYLE_IN_THEME', true );
+	define( 'PBOX_CSS_URL', get_bloginfo( 'template_directory' ).'/pbox.css?'.get_option( 'pb_csstimestamp' ) );
+	define( 'PBOX_CSS_LOC', PBox::get_theme_location() . '/pbox.css' );
+}
+else
+{
+	define( 'PBOX_STYLE_IN_THEME', false );
+	define( 'PBOX_CSS_URL', PBOX_PLUGIN_URL . 'css/pbox.css' );
+	define( 'PBOX_CSS_LOC', PBOX_PLUGIN_DIR . 'css/pbox.css' );
+}
 
 define( 'POST', $wpdb->prefix . 'posts' );
 define( 'PBOX_TYPE_LINK', '1' );
 define( 'PBOX_TYPE_PAGE', '2' );
 define( 'PBOX_TYPE_TEXT', '3' );
+define( 'PBOX_TYPE_EXTERNAL', '4');
+define( 'PBOX_TYPE_IMAGE', '5' );
 
 /**
 * PBox class
@@ -91,7 +108,7 @@ class PBox {
 		) ;";
 		dbDelta( $sql );
 		// Generates table storing style information ( {prefix}_pbox_styles )
-		$sql = "CREATE TABLE  `".PBOX_STYLE_TABLE."` (
+		$sql = "CREATE TABLE `".PBOX_STYLE_TABLE."` (
 		 `style_id` varchar(255) NOT NULL,
 		 `above_items_template` text NOT NULL,
 		 `links_template` text NOT NULL,
@@ -104,8 +121,8 @@ class PBox {
 		 PRIMARY KEY  (`style_id`)
 		) ;";
 		dbDelta( $sql );
-		// Inserting the initial default style.
-		$wpdb->query("insert into ".PBOX_STYLE_TABLE." VALUES ('Default-Style',
+		// Inserting the initial default styles.
+		$wpdb->query("insert ignore into ".PBOX_STYLE_TABLE." VALUES ('Default-Style',
 			'<div class=\'pbox_default-style\'><div class=\'pbox_default-style_head\'><h2>%PBOX_TITLE%</h2></div><div class=\'pbox_default-style_body\'><div id=\'content\'>',
 			'<p>%ITEM_LINK%</p>',
 			'<p>%ITEM_LINK% - %ITEM_EXCERPT%</p>',
@@ -114,11 +131,48 @@ class PBox {
 			'<p>%ITEM_LINK%</p><p>%ITEM_CONTENT%</p>',
 			'%ITEM_CONTENT%<br />',
 			'</div></div></div>')");
-		dbDelta( $sql );
+		
+		$wpdb->query("insert ignore into ".PBOX_STYLE_TABLE." VALUES ('Alert',
+			'<div class=\"pbox_alert\"><div class=\"pbox_alert_head\"><h2>%PBOX_TITLE%</h2></div><div class=\"pbox_alert_body\"><div id=\"contentslot\">',
+			'<p>%ITEM_LINK%</p>',
+			'<p>%ITEM_LINK% - %ITEM_EXCERPT%</p>',
+			'<p>%ITEM_LINK%</p>',
+			'<p>%ITEM_LINK% - %ITEM_EXCERPT%</p>',
+			'<p>%ITEM_LINK%</p><p>%ITEM_CONTENT%</p>',
+			'%ITEM_CONTENT%<br />',
+			'</div></div></div>')");
+		
+		$wpdb->query("insert ignore into ".PBOX_STYLE_TABLE." VALUES ('Infobytes',
+			'<div class=\"pbox_infobytes\"><div class=\"pbox_infobytes_head\"><h2>%PBOX_TITLE%</h2></div><div class=\"pbox_infobytes_body\"><div id=\"contentslot\">',
+			'<p>%ITEM_LINK%</p>',
+			'<p>%ITEM_LINK% - %ITEM_EXCERPT%</p>',
+			'<p>%ITEM_LINK%</p>',
+			'<p>%ITEM_LINK% - %ITEM_EXCERPT%</p>',
+			'<p>%ITEM_LINK%</p><p>%ITEM_CONTENT%</p>',
+			'%ITEM_CONTENT%<br />',
+			'</div></div></div>')");
+		
+		// Check for old DB post_meta key name and update it
+		$wpdb->query('UPDATE `'.$wpdb->postmeta.'` SET `meta_key`=\'_xwidgets_widget_pb\' WHERE `meta_key`=\'xwidgets_widget_pb\'');
+		
+		// Check for old location of pbox.css and move to new location
+		if ( get_option( 'pbox_style_in_theme') === false )
+		{
+			add_option( 'pbox_style_in_theme', 'n' );
+			$old_file = PBox::get_theme_location() . '/pbox.css';
+			if ( file_exists($old_file) )
+			{
+				// file exists in old location, attempt to move it
+				if (!@copy($old_file, PBOX_PLUGIN_DIR . 'css/pbox.css'))
+					update_option( 'pbox_css_moved', 0 ); // failed to move file
+				else
+					update_option( 'pbox_css_moved', 1 ); // successfully moved file
+			}
+		}
 
 		// Recording the current version of the plugin/database.
-		add_option('PBox_DB', '2.2');
-	}
+		update_option('PBox_DB', PBOX_CUR_VERSION);
+	}	
 	
 	/**
 	* Records usage of box in a slot on a page. Slot refers
@@ -369,6 +423,18 @@ class PBox {
 				$valid = FALSE;
 			}
 		}
+		
+		// if successful, run filters for edit post on each page the pbox is on.
+		// this is for refreshing the cache or running any other functions that 
+		// are required when a post is modified
+		if ( $valid )
+		{
+			$usage = PBox::get_pages_using_box( $box_id );
+			foreach( (array) $usage as $pages ) {
+				apply_filters('edit_post', $pages['page_id']);
+			}
+		}
+		
 		return $valid;
 	}
 
@@ -785,17 +851,17 @@ class PBox {
 			}
 		}
 		// Replace variables in style template
-		$box_top_template = preg_replace( "/%PBOX_TITLE%/", $pbox_data['title'], $box_top_template );
-		$box_top_template = preg_replace( "/%ITEM_TITLE%/", $first_item_title, $box_top_template );
-		$box_top_template = preg_replace( "/%ITEM_URL%/", $first_item_url, $box_top_template );
-		$box_top_template = preg_replace( "/%ITEM_LINK%/", $first_item_link, $box_top_template );
-		$box_top_template = preg_replace( "/%ITEM_EXCERPT%/", $first_item_excerpt, $box_top_template );
+		$box_top_template = preg_replace( '/%PBOX_TITLE%/', $pbox_data['title'], $box_top_template );
+		$box_top_template = preg_replace( '/%ITEM_TITLE%/', $first_item_title, $box_top_template );
+		$box_top_template = preg_replace( '/%ITEM_URL%/', $first_item_url, $box_top_template );
+		$box_top_template = preg_replace( '/%ITEM_LINK%/', $first_item_link, $box_top_template );
+		$box_top_template = preg_replace( '/%ITEM_EXCERPT%/', $first_item_excerpt, $box_top_template );
 	
 		if ( isset( $item ) && $item['type_id'] == PBOX_TYPE_PAGE ) { // Replace PAGE-type specific variables
-			$box_top_template = preg_replace( "/%ITEM_CONTENT%/", $first_item_content, $box_top_template );
+			$box_top_template = preg_replace( '/%ITEM_CONTENT%/', $first_item_content, $box_top_template );
 			// Replace item options
 			foreach( (array) $first_item_options as $optName => $optValue ) {
-				$box_top_template = preg_replace( "/%ITEM_POSTMETA_" . $optName . "%/", $optValue, $box_top_template );
+				$box_top_template = preg_replace( '/%ITEM_POSTMETA_' . $optName . '%/', $optValue, $box_top_template );
 			}
 		}
 		echo $box_top_template;
@@ -824,15 +890,37 @@ class PBox {
 		$item_excerpt = '';
 		$item_content = '';
 		$item_target = '_none'; //default to no target. Will be overwritten if this has been defined as necessary
-		$link_image= '';
+		$link_image = '';
 		
 		if ( is_array( $items ) || is_object( $items ) ) {
+		
 			foreach ( (array) $items as $item ) {
-				if ( $item['type_id'] == PBOX_TYPE_TEXT ) {
+				unset( $link_image );
+				if ( $item['type_id'] == PBOX_TYPE_TEXT )
+				{
 					// Replace variables in template
-					$template = preg_replace( "/%PBOX_TITLE%/", $pbox_data['title'], $box_text_template );
-					$template = preg_replace( "/%ITEM_CONTENT%/", $item['content'], $template );
-				} elseif ( $item['type_id'] == PBOX_TYPE_PAGE ) {
+					$template = preg_replace( '/%PBOX_TITLE%/', $pbox_data['title'], $box_text_template );
+					$template = preg_replace( '/%ITEM_CONTENT%/', $item['content'], $template );
+				}
+				elseif ( $item['type_id'] == PBOX_TYPE_IMAGE )
+				{
+					$template = preg_replace( '/%PBOX_TITLE%/', $pbox_data['title'], $box_text_template );
+					
+					// turn thumbnail into fancybox if fancybox enabled
+					if ( function_exists('mfbfw_init') )
+						$image_content = '<a href="'.wp_get_attachment_url( $item['content'] ).'" class="fancybox"><img src="'.wp_get_attachment_thumb_url( $item['content'] ).'" alt=""></a>';
+					else
+						$image_content = '<img src="' . wp_get_attachment_thumb_url( $item['content'] ) . '" alt="">';
+					$template = preg_replace( '/%ITEM_CONTENT%/', $image_content, $template );
+				}
+				elseif ( $item['type_id'] == PBOX_TYPE_EXTERNAL )
+				{
+					$item_content = apply_filters( 'pbox-external-content', force_balance_tags( wp_remote_fopen( preg_replace( '/%WP_URL%/', get_bloginfo('url'), $item['content'] ) ) ) );
+				
+					$template = preg_replace( '/%PBOX_TITLE%/', $pbox_data['title'], $box_text_template );
+					$template = preg_replace( '/%ITEM_CONTENT%/', $item_content, $template );
+				}
+				elseif ( $item['type_id'] == PBOX_TYPE_PAGE ) {
 					$page_id = $item['content'];
 					$page = get_post( $page_id, ARRAY_A );
 					/**
@@ -877,12 +965,13 @@ class PBox {
 						// Item link
 						$item_link = '<a href="' . $item_url . '" title="' . strip_tags( $item_excerpt ).'...' . '">' . $item_title . '</a> ';
 						if( isset( $link_image ) ) {
-							echo $item_link .= $link_image;
+							$item_link .= $link_image;
 						}
 						if ( isset( $page['post_excerpt'] ) ) {
 							$item_excerpt= wpautop( $item_excerpt, true );
 						}
 						//Item content
+
 						$item_content = do_shortcode( wpautop( $page['post_content'], true ) );
 						// Select the appropriate style field
 						switch( $item['callout_id'] ) {
@@ -907,7 +996,8 @@ class PBox {
 						// Image
 						$item_images = self::fetch_page_image( $page_id, $style_index );
 					}
-				} elseif ( $item['type_id'] == PBOX_TYPE_LINK ) {
+				} 
+				elseif ( $item['type_id'] == PBOX_TYPE_LINK ) {
 					$link_data = get_bookmark( $item['content'], ARRAY_A );
 					if ( $link_data['link_id'] != 0 ) {
 						$item_target = $link_data['link_target'];
@@ -946,7 +1036,7 @@ class PBox {
 				$edit_image = '';
 				if( isset( $item ) && $item['type_id'] == PBOX_TYPE_PAGE && pbox_check_capabilities() ) {
 						ob_start();
-						edit_post_link( '<img style="height:12px;width:12px;float:right;" src="' . PBOX_PLUGIN_URL . 'images/page_edit.png" alt="' . __( 'Edit this content', 'pb' ) .'" />', '', '', $page_id );
+						edit_post_link( '<img style="height:12px;width:12px;float:right;" src="' . PBOX_PLUGIN_URL . 'css/img/page_edit.png" alt="' . __( 'Edit this content', 'pb' ) .'" />', '', '', $page_id );
 						$edit_image = ob_get_contents();
 						ob_end_clean();
 				}
@@ -971,7 +1061,6 @@ class PBox {
 					}
 				}
 				echo $template;
-				unset( $link_image );
 			}
 		}
 	}
@@ -986,7 +1075,7 @@ class PBox {
 		$box_id = $box_data['box_data']['pbox_id'];
 		$items = $box_data['items'];
 		if( pbox_check_capabilities() && $box_id > 0 ) {
-			echo "<p style='font-size:smaller;font-weight:bold'><a href='" . wp_nonce_url( 'wp-admin/'.self::get_admin_url( "pbox/pb.edit.php", "&action=edit_view&box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit this PBox', 'pb' )."</a>";
+			echo "<p style='font-size:smaller;font-weight:bold'><a href='" . wp_nonce_url( get_bloginfo( 'wpurl' ).'/wp-admin/'.self::get_admin_url( PBOX_DIR_NAME . 'pb.edit.php', "&action=edit_view&box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit this PBox', 'pb' )."</a>";
 		}
 		if ( is_array( $items ) || is_object( $items ) ) {
 			// Get the first item
@@ -1038,7 +1127,7 @@ class PBox {
 		global $wpdb;
 		$style_id = esc_attr( $style_id );
 		if ( !self::verify_input( $style_id ) ) {
-			wp_die( __( '<strong>ERROR:</strong> Invalid style ID.', 'pb' ) );
+			wp_die( __( '<strong>ERROR:</strong> Invalid style ID ('.$style_id.').', 'pb' ) );
 		}
 		$style_data = $wpdb->get_results( 'SELECT * FROM ' . PBOX_STYLE_TABLE . "
 																WHERE style_id='$style_id'", ARRAY_N);
@@ -1119,7 +1208,7 @@ class PBox {
 	*
 	* @return string - the location of the theme
 	*/
-	function get_theme_location() {
+	static function get_theme_location() {
 		return  str_replace( '\\', '/', ( get_theme_root() . '/' . get_template() ) );
 	}
 
@@ -1171,7 +1260,6 @@ class PBox {
 	* @return array - returns an array of all PBox associated CSS fragments
 	*/
 	function load_style_css() {
-		$style_dir = self::get_theme_location();
 		$css_file_data = '';
 		/**
 		* Note that nothing is loaded if the CSS file cannot be written.
@@ -1179,20 +1267,13 @@ class PBox {
 		* page for modification. This is not necessary if the directory or 
 		* file is not writable as that field will be deactivated.
 		*/
-		if ( !self::pb_is_writable( $style_dir . '/pbox.css' ) ) {
-			if ( file_exists( $style_dir . '/pbox.css' ) ) {
+		if ( !self::pb_is_writable( PBOX_CSS_LOC ) ) {
+			if ( file_exists( PBOX_CSS_LOC ) )
 				return false;
-			} else {
-				// If the directory is not writable (no new file can be written
-				if( !self::pb_is_writable( $style_dir . '/' ) ) {
-					return false;
-				}
-			}
-		} else {
-			// If the file exists and is writable
-			if ( file_exists( $style_dir . '/pbox.css' ) ) {
-				$css_file_data = file_get_contents( $style_dir . '/pbox.css' );
-			}
+			elseif( !self::pb_is_writable( rtrim(PBOX_CSS_LOC, 'pbox.css') ) )
+				return false; // If the directory is not writable (no new file can be written
+		} elseif ( file_exists( PBOX_CSS_LOC ) ) {
+			$css_file_data = file_get_contents( PBOX_CSS_LOC ); // If the file exists and is writable
 		}
 		/**
 		* The 182 is added in an attempt to make the separator unique so 
@@ -1232,7 +1313,6 @@ class PBox {
 		* that user CSS is not interpreted as a separator.
 		*/
 		$css = implode( '/*---separator--182---*/', $css );
-		$style_dir = self::get_theme_location();	
 		// Ensure there is something to write before checking the filesystem
 		if( strlen( $css ) > 0 ) {
 			/**
@@ -1240,22 +1320,16 @@ class PBox {
 			* the stylesheet in the cache when it has changed)
 			*/
 			update_option( 'pb_csstimestamp', time() );
-			if ( !self::pb_is_writable( $style_dir . '/pbox.css' ) ) {
-				if ( file_exists( $style_dir . '/pbox.css' ) ) {
-					// If the file exists and isn't writable
-					return new WP_Error( 'css_unwritable', sprintf( __( '<strong>ERROR:</strong> %s/pbox.css is not writable.', 'pb' ), $style_dir ) );
-				} else {
-					if( !self::pb_is_writable( $style_dir . '/' ) ) {
-						// If the directory isn't writable (new file can't be created)
-						return new WP_Error( 'dir_unwritable', sprintf( __( '<strong>ERROR:</strong> %s/ is not writable.', 'pb' ), $style_dir ) );
-					} else {
-						// If the file doesn't exist and the directory is writable, make it.
-						file_put_contents( $style_dir . '/pbox.css', $css );
-					}
-				}
+			if ( !self::pb_is_writable( PBOX_CSS_LOC ) ) {
+				if ( file_exists( PBOX_CSS_LOC ) )
+					return new WP_Error( 'css_unwritable', sprintf( __( '<strong>ERROR:</strong> %s is not writable.', 'pb' ), PBOX_CSS_LOC ) ); // If the file exists and isn't writable
+				elseif( !self::pb_is_writable( PBOX_PLUGIN_DIR ) )
+					return new WP_Error( 'dir_unwritable', sprintf( __( '<strong>ERROR:</strong> %s is not writable.', 'pb' ), rtrim(PBOX_CSS_LOC, 'pbox.css') ) ); // If the directory isn't writable (new file can't be created)
+				else
+					file_put_contents( PBOX_CSS_LOC, $css ); // If the file doesn't exist and the directory is writable, make it.
 			} else {
 				// if writable and existing, just append the new CSS
-				file_put_contents( $style_dir . '/pbox.css', $css );
+				file_put_contents( PBOX_CSS_LOC, $css );
 			} 
 		}
 	}
@@ -1404,7 +1478,7 @@ class PBox {
 	* @return array Array of content types indexed by their type ID
 	*/
 	function get_type_array() {
-		return array( PBOX_TYPE_LINK => __( 'link', 'pb' ), PBOX_TYPE_PAGE => __( 'page/post/file', 'pb' ), PBOX_TYPE_TEXT => __( 'text', 'pb' ) );
+		return array( PBOX_TYPE_LINK => __( 'link', 'pb' ), PBOX_TYPE_PAGE => __( 'page/post/file', 'pb' ), PBOX_TYPE_TEXT => __( 'text', 'pb' ), PBOX_TYPE_EXTERNAL => __( 'external content', 'pb'), PBOX_TYPE_IMAGE => __( 'image', 'pb' ) );
 	}
 
 	/**
@@ -1500,12 +1574,7 @@ class PBox {
 			//since all links are unmanaged and should hence open to a new window; internal managed pages should be using the page_id plugin
 			$link_image = "<img style='height:12px;width:12px' class='pbox_link_icon' alt='WWW' src='".PBOX_PLUGIN_URL."images/world_link.png' />";
 		}
-		// Check the extra icons set in pb.config.php
-		foreach( (array) $extra_icons as $extra ) {
-			if( $extra['regex'] && $extra['filename'] && preg_match( $extra['regex'], $link_url ) ) {
-				$link_image = "<img class='pbox_link_icon' alt='{$extra['name']}' src='" . PBOX_PLUGIN_URL . "images/{$extra['filename']}' />";
-			}
-		}
+
 		return $link_image;
 	}
 }

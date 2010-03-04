@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -39,7 +39,6 @@ http://www.bankofcanada.ca/
 * filename = the name of the image saved in the images directory within the PBox plugin directory.
 */
 
-$extra_icons = array();
 /**
 * Example (RAR archive) :
 *

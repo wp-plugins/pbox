@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -85,7 +85,7 @@ if ( isset( $_REQUEST['message'] ) ) {
 		<td width='50%' valign='top'>
 		<h3 align='center'><?php _e( 'Create new presentation box', 'pb' );?></h3>
 		<p><?php _e( 'To create new presentation boxes, enter the title of the new box below.', 'pb' ); ?></p>
-		<form id='pbox-add-process' action="<?php echo PBox::get_admin_url( 'pbox/pb.edit.php', '&amp;action=add_process' );?>" method='post'>
+		<form id='pbox-add-process' action="<?php echo PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', '&amp;action=add_process' );?>" method='post'>
 		<?php wp_nonce_field( 'pbox-box-add' ); ?>
 		<p><?php _e( 'Title:', 'pb' ); ?> <input type='text' name='box_title' /></p>
 		<p><input type='submit' value='<?php _e( 'Create', 'pb' ) ?>' class='button' /></p>
@@ -153,7 +153,7 @@ if ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] == 'search_by_id' ) {
 		//change this to check if the pbox ACTUALLY exists!
 		$the_box = PBox::get_box( $item_id );
 		if( $the_box != -1 && $item_id > 0 ) {
-			echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( "pbox/pb.edit.php", "&amp;action=edit_view&amp;box_id=$item_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a> (ID $item_id)</p>";
+			echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&amp;action=edit_view&amp;box_id=$item_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a> (ID $item_id)</p>";
 		}
 		if ( $the_box['pbox_id'] ) {
 			//found pbox
@@ -198,7 +198,7 @@ if( isset( $_REQUEST['action'] ) && $_REQUEST['action'] == 'view_dependencies' )
 		if ( strlen( $title ) >= 1 && is_array( $rows ) ) {	
 			// if a valid box id, offer an edit pbox link (will direct to adding one if not already in use)
 			if( $box_id > 0 ) {
-				echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( "pbox/pb.edit.php", "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a> (ID $box_id)</p>";
+				echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a> (ID $box_id)</p>";
 			}
 			foreach ( (array) $rows as $row ) {
 				unset( $edit_link );
@@ -297,19 +297,19 @@ if( !empty( $boxes ) ) {
 			<td  width='3%'><?php echo $num_items ?></td>
 			<td  width='5%'><?php if( is_object( $user_info ) ) echo $user_info->user_login ?></td>
 			<td width='10%' ><?php echo $readable_time ?></td>
-			<td width='3%'><a href='<?php echo wp_nonce_url( PBox::get_admin_url( 'pbox/pb.edit.php', "&amp;action=edit_view&amp;box_id=".$box['pbox_id'] ), 'pbox-box-edit' ) ?>' class='edit'><?php _e( 'Edit', 'pb' ) ?></a></td>
+			<td width='3%'><a href='<?php echo wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&amp;action=edit_view&amp;box_id=".$box['pbox_id'] ), 'pbox-box-edit' ) ?>' class='edit'><?php _e( 'Edit', 'pb' ) ?></a></td>
 		<td width="3%">
 			<a onclick="jQuery( '#pbox-clone-process' ).attr( 'action', this.href ).submit(); return false;"
-			href=" <?php echo PBox::get_admin_url( 'include_pbox_manage', "&amp;action=clone_process&amp;box_id={$box['pbox_id']}" ); ?>" rel="permalink" class='edit'><?php _e( 'Clone', 'pb' ); ?></a>
+			href=" <?php echo wp_nonce_url(PBox::get_admin_url( PBOX_DIR_NAME.'pb.manage.php', "&amp;action=clone_process&amp;box_id={$box['pbox_id']}" )); ?>" rel="permalink" class='edit'><?php _e( 'Clone', 'pb' ); ?></a>
 		</td>
 		<?php
 		if( class_exists( 'XWidgets' ) ) {
-			echo "<td width='3%'><a href='" . wp_nonce_url( PBox::get_admin_url( 'include_pbox_manage', "&amp;action=view_dependencies&amp;box_id={$box['pbox_id']}" ), 'pbox-boxdependencies-view' ) . "' rel='permalink' class='edit'>" . __( 'Dependencies', 'pb' ) . '</a></td>';
+			echo "<td width='3%'><a href='" . wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.manage.php', "&amp;action=view_dependencies&amp;box_id={$box['pbox_id']}" ), 'pbox-boxdependencies-view' ) . "' rel='permalink' class='edit'>" . __( 'Dependencies', 'pb' ) . '</a></td>';
 		}
 		?>
 		<td width='3%'>
 			<a onclick="if (confirm('<?php echo esc_js( __( 'Are you sure you want to delete this box?', 'pb' ) ); ?>')) { jQuery('#pbox-delete-process').attr('action', this.href).submit(); }return false;;"
-				href="<?php echo PBox::get_admin_url( 'include_pbox_manage', "&amp;action=delete_process&amp;box_id={$box['pbox_id']}" ); ?>" rel='permalink' class='delete'><?php _e( 'Delete', 'pb' ); ?></a>
+				href="<?php echo wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.manage.php', "&amp;action=delete_process&amp;box_id={$box['pbox_id']}" )); ?>" rel='permalink' class='delete'><?php _e( 'Delete', 'pb' ); ?></a>
 		</td>
 		</tr>
 		<?php

@@ -1,10 +1,11 @@
 <?php
 /**
 Plugin Name: PBox
-Description: Customizable content widgets (presentation boxes) able to display posts, pages, links and plain text in a custom style.
-Version: 2.2.1
-Author: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+Description: Customizable presentation widget to display posts, pages, external content, links, media images, and plain text in a customized style.
+Version: 2.3
+Author: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 Author URI: http://www.bankofcanada.ca/
+Plugin URI: http://bankofcanada.wordpress.com/
 */
 
 /*  Copyright 2009 Bank of Canada (Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton)
@@ -26,6 +27,9 @@ Author URI: http://www.bankofcanada.ca/
 
 global $wpdb;
 
+//Include the PBox object and its functionality
+require_once( 'pb.inc.php' );
+
 // Register filter/action hooks
 register_activation_hook( __FILE__, 'pb_check_version' ); // Check compatibility with WordPress version first.
 
@@ -45,18 +49,15 @@ add_action( 'delete_attachment', 'pb_attachment_deleted' );
 //updating the usage table when a WordPress link is deleted (admin end)
 add_action( 'delete_link', 'pb_link_deleted' );
 //checking request when it happens to avoid requests being sent multiple times (admin end)
-add_action('load-pbox/pb.manage.php', 'pbox_admin_actions');
+add_action('load-'.PBOX_DIR_NAME.'pb.manage.php', 'pbox_admin_actions');
 //checking request for redirect to edit page
-add_action('load-pbox/pb.manage.php', 'pb_edit_support');
+add_action('load-'.PBOX_DIR_NAME.'pb.manage.php', 'pb_edit_support');
 //modifying request for redirect to edit page from add_process
-add_action('load-pbox/pb.edit.php', 'pb_add_support');
+add_action('load-'.PBOX_DIR_NAME.'pb.edit.php', 'pb_add_support');
 //modifying the pbox tables as necessary when changing content/order in individual boxes (admin end)
 add_action('wp_ajax_edit_process', 'pb_ajax_response', 10, 1);
 //adding the time for the last update of the css file
 add_option( 'pb_csstimestamp', '', '', 'yes' );
-
-//Include the PBox object and its functionality
-require_once( 'pb.inc.php' );
 
 // Used for roles
 add_filter( 'capabilities_list', 'pbox_capabilities' );
@@ -76,7 +77,7 @@ function pb_check_version() {
 	else {
 		//otherwise stop the activation request and deactivate
 		$active_plugins = get_option( 'active_plugins' );
-		$pbox_loc = array_search( 'pbox/pb.php', $active_plugins );
+		$pbox_loc = array_search( PBOX_DIR_NAME.'pb.php', $active_plugins );
 		if( false !== $pbox_loc ) {
 			// remove PBox from the list of active plugins
 			unset( $active_plugins[$pbox_loc] );
@@ -84,8 +85,8 @@ function pb_check_version() {
 			unset( $_GET['activate'] );
 			// add it to the recently activated section with the correct info
 			$recently_activated = get_option( 'recently_activated' );
-			if( !isset( $recently_activated['pbox/pb.php'] ) ) {
-				$recently_activated['pbox/pb.php'] = time();
+			if( !isset( $recently_activated[PBOX_DIR_NAME.'pb.php'] ) ) {
+				$recently_activated[PBOX_DIR_NAME.'pb.php'] = time();
 				update_option( 'recently_activated', $recently_activated );
 			}
 			// kill the processing and report the error.
@@ -121,7 +122,7 @@ function pb_plugin_localization() {
 * @return void
 */
 function pb_js() {
-	if ( preg_match( '/.*pbox.*/', $_SERVER['REQUEST_URI'] ) ) {
+	if ( preg_match( '/.*'.trim(trim(PBOX_DIR_NAME, '/'), '\\').'.*/', $_SERVER['REQUEST_URI'] ) ) {
 		// Include jQuery/Sortable for the PBox edit panel
 		wp_enqueue_script( 'jquery' );
 		wp_enqueue_script( 'jquery-ui-sortable' );
@@ -189,23 +190,23 @@ function pb_link_deleted( $link_id ) {
 * @return void
 */
 function pb_style_init() {
-	$pb_style = get_bloginfo( 'template_directory' ). '/pbox.css?' . get_option( 'pb_csstimestamp' );
-	if ( file_exists( $pb_style ) ) {
-		wp_register_style( 'pbox_style', $pb_style );
+	if ( file_exists( PBOX_CSS_LOC ) ) {
+		wp_register_style( 'pbox_style', PBOX_CSS_URL );
 		wp_enqueue_style( 'pbox_style');
 	}
 }
 
 function include_pbox_manage() {
-	include(dirname(__FILE__)."/pb.manage.php");
+//	pbox_admin_actions();
+	include(dirname(__FILE__).'/pb.manage.php');
 }
 
 function include_pbox_styles() {
-	include(dirname(__FILE__)."/pb.styles.php");
+	include(dirname(__FILE__).'/pb.styles.php');
 }
 
 function include_pbox_uninstall() {
-	include(dirname(__FILE__)."/pb.uninstall.php");
+	include(dirname(__FILE__).'/pb.uninstall.php');
 }
 
 /*
@@ -228,7 +229,8 @@ add_options_page("WP-Optimize", "WP-Optimize", 10, "WP-Optimize", "optimize_menu
 			add_submenu_page( 'include_pbox_manage', __( 'Manage PBoxes', 'pb' ), __( 'Manage PBoxes', 'pb' ), 5,  'include_pbox_manage' , 'include_pbox_manage');
 			add_submenu_page( 'include_pbox_manage', __( 'PBox Styles', 'pb' ), __( 'PBox Styles', 'pb' ), 5, 'include_pbox_styles' , 'include_pbox_styles' );
 			add_submenu_page( 'include_pbox_manage', __( 'Uninstall PBox', 'pb' ), __( 'Uninstall PBox', 'pb' ), 5, 'include_pbox_uninstall' , 'include_pbox_uninstall'  );
-			add_submenu_page( 'include_pbox_manage', '', '', 5, 'pbox/pb.edit.php' );
+			add_submenu_page( 'include_pbox_manage', '', '', 5, PBOX_DIR_NAME.'pb.edit.php' );
+			add_submenu_page( 'include_pbox_manage', '', '', 5, PBOX_DIR_NAME.'pb.manage.php' );
 		}
 		
 	}
@@ -392,7 +394,7 @@ function pb_ajax_response() {
 			// If there is content, build a line for the content array
 			if ( strlen( $_REQUEST['content_'.$item] ) > 0 ) {
 				$line['type_id'] = intval( $_REQUEST['type_' . $item] );
-				if ( $line['type_id'] != PBOX_TYPE_TEXT ) {
+				if ( $line['type_id'] != PBOX_TYPE_TEXT && $line['type_id'] != PBOX_TYPE_EXTERNAL ) {
 					$line['content'] = intval( $_REQUEST['content_' . $item] );
 				} else {
 					$line['content'] = $_REQUEST['content_' . $item];
@@ -444,7 +446,7 @@ function pb_ajax_response() {
 */
 function pb_edit_support() {
 	if ( isset ( $_REQUEST['action'] ) && ( $_REQUEST['action'] == 'edit_view' || $_REQUEST['action'] == 'add_process' || $_REQUEST['action'] == 'edit_process' ) ) {
-		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pbox/pb.edit.php', "&action=edit_process&box_id={$_REQUEST['box_id']}" ), 'pbox-box-edit' ) ) );
+		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&action=edit_process&box_id={$_REQUEST['box_id']}" ), 'pbox-box-edit' ) ) );
 	}
 }
 
@@ -459,7 +461,7 @@ function pb_add_support() {
 		check_admin_referer( 'pbox-box-add' );
 		$box_id = PBox::create_box( $_REQUEST['box_title'] );
 		PBox::update_info( $box_id );
-		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( 'pbox/pb.edit.php', "&action=edit_view&box_id=$box_id" ), 'pbox-box-edit' )) );
+		wp_redirect( html_entity_decode( wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&action=edit_view&box_id=$box_id" ), 'pbox-box-edit' )) );
 	}
 }
 
@@ -594,7 +596,7 @@ if( class_exists( 'WP_Widget' ) ) {
 			// Edit link, if there is a box_id to access for edit
 			if( PBox::get_box( $box_id ) != -1 || $box_id == 0 ) {
 				if( pbox_check_capabilities() && $box_id > 0 ) {
-					echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( "pbox/pb.edit.php", "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a>";
+					echo "<p><a href='" . wp_nonce_url( PBox::get_admin_url( PBOX_DIR_NAME.'pb.edit.php', "&amp;action=edit_view&amp;box_id=$box_id" ), "pbox-box-edit" ) . "' rel='permalink'>".__( 'Edit PBox', 'pb' )."</a>";
 				}
 			} else {
 				printf( "<p><strong>NOTE:</strong> PBox %d does not exist. Please enter a valid PBox ID.</p>", $box_id );
@@ -604,3 +606,28 @@ if( class_exists( 'WP_Widget' ) ) {
 	// Register the PBox_Widget
 	add_action( 'widgets_init', create_function( '', 'return register_widget( "PBox_Widget" );' ) );
 }
+
+function pbox_css_moved () {
+	printf ('<div class="error"><p><strong>%s %s %s %s. %s.</strong></p></div>', __('PBox moved your CSS Stylesheet from', 'pbox'), PBox::get_theme_location() . '/pbox.css' , __('to', 'pbox'), PBOX_PLUGIN_DIR.'css/pbox.css', __('Please move any other required files (ie images) to their proper location. Note that the old css file was not deleted', 'pbox') );
+}
+function pbox_css_not_moved () {
+	printf ('<div class="error"><p><strong>%s %s %s %s %s</strong></p></div>', __('PBox was unable to copy your CSS Stylesheet from', 'pbox'), PBox::get_theme_location() . '/pbox.css', __('to', 'pbox'), PBOX_PLUGIN_DIR.'css/pbox.css', __('. Please move this file and any other required files to their proper location.') );
+}
+function pbox_reactivate () {
+	printf ('<div class="error"><p><strong>%s.</strong></p></div>', __('PBox needs to be deactivated and then re-activated in order to work properly', 'pbox') );
+}
+
+// check to see if an admin notice needs to be displayed for css files
+$pbox_css_moved = get_option('pbox_css_moved');
+if ( $pbox_css_moved !== false )
+{
+	if ( $pbox_css_moved == 0 )
+		add_action( 'admin_notices', 'pbox_css_not_moved' );
+	elseif ( $pbox_css_moved == 1 )
+		add_action( 'admin_notices', 'pbox_css_moved' );
+	
+	delete_option('pbox_css_moved');
+}
+// check if admin notice needs to be displayed for re-activation
+if ( get_option('PBox_DB') != PBOX_CUR_VERSION )
+	add_action( 'admin_notices', 'pbox_reactivate' );

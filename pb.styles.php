@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -43,16 +43,17 @@ $no_css = false;
 </style>
 <div class="wrap">
 <?php
-if( !PBox::pb_is_writable( PBox::get_theme_location().'/pbox.css' ) ) { ?>
+if( !PBox::pb_is_writable( PBOX_CSS_LOC ) ) { ?>
 	<div class="error" id="message">	
-			<p><?php printf( __( '<strong>NOTE:</strong> CSS information cannot be saved. <em>%s</em> is not writable.', 'pb' ), PBox::get_theme_location().'/pbox.css' ); ?></p>
+			<p><?php printf( __( '<strong>NOTE:</strong> CSS information cannot be saved. <em>%s</em> is not writable.', 'pb' ), PBOX_CSS_LOC ); ?></p>
 		</div>
 <?php 
 	$no_css = true;
 }
 if( isset( $_REQUEST['action'] ) ) {
 	$action = $_REQUEST['action'];
-	if ( $action == 'add_style_process' ) { // Run when a new style is being created
+	if ( $action == 'add_style_process' ) // Run when a new style is being created
+	{ 
 		check_admin_referer( 'pbox-style-add' );
 		if ( count( $_POST ) != 0 ) { // Make sure something was actually submitted to this page
 			$style_id = $_POST['style_name'];
@@ -73,8 +74,16 @@ if( isset( $_REQUEST['action'] ) ) {
 			}
 		}
 	}
-
-	if( $action == 'delete_process' ) { // Run when a new style is being deleted
+	elseif ( $action == 'edit_style_location' ) // run when stylesheet location option is changed
+	{ 
+		check_admin_referer( 'pbox-style-location' );
+		if ( $_POST['pbox_style_in_theme'] == 'y' )
+			update_option('pbox_style_in_theme', 'y');
+		else
+			update_option('pbox_style_in_theme', 'n');
+	}
+	elseif( $action == 'delete_process' ) // Run when a new style is being deleted
+	{ 
 		$style_id = $_REQUEST['style_id'];
 		if ( !PBox::verify_input( $style_id ) ) {
 			$error = new WP_Error( 'invalid_style', __( "<strong>ERROR:</strong> Invalid style ID. Style IDs must only contain alphanumeric characters, hyphens ( - ), and underscores ( _ )." ) );
@@ -90,8 +99,8 @@ if( isset( $_REQUEST['action'] ) ) {
 			<?php	
 		}
 	}
-	
-	if ( $action == 'edit_process' ) { // Run when Edit page submits
+	elseif ( $action == 'edit_process' ) // Run when Edit page submits
+	{ 
 		check_admin_referer( 'pbox-style-editprocess' );
 		if ( count( $_POST ) != 0 ) { // Make sure something was actually submitted to this page
 			$style_id = $_REQUEST['style_id'];
@@ -289,7 +298,7 @@ if( isset( $_REQUEST['action'] ) ) {
 * if the page is in error or deleting a style display the standard 'Styles' 
 * page that lists the styles and gives options
 */
-if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'delete_process' ) { 
+if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'delete_process'  || $action == 'edit_style_location' ) { 
 	?>
 	<div id="icon-themes" class="icon32"><br /></div>
 	<h2><?php _e( 'PBox Styles', 'pb' );?></h2>
@@ -300,6 +309,13 @@ if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'dele
 		<p><?php _e( 'Name:', 'pb' );?> <input type='text' name='style_name' /></p>
 		<p><input type='submit' value='<?php _e( 'Create', 'pb' );?>' class='button' /></p>
 	</form>
+    <hr />
+    <form action="<?php echo PBox::get_admin_url( 'include_pbox_styles', '&amp;action=edit_style_location' );?>" method='post'>
+		<?php wp_nonce_field( "pbox-style-location" ); ?>
+		<p><input type='checkbox' name='pbox_style_in_theme' value='y'<?php if (get_option('pbox_style_in_theme') == 'y') echo ' checked'?>/> <?php _e( 'Store stylesheet in theme directory', 'pb' ); ?></p>
+		<p><input type='submit' value='<?php _e( 'Save', 'pb' );?>' class='button' /></p>
+	</form>
+    <hr />
 	<h3><?php _e( 'Existing Styles', 'pb' );?></h3>
 	<?php
 	$styles = PBox::get_styles();
@@ -315,18 +331,18 @@ if ( ( isset( $in_error) && $in_error ) || !isset( $action ) || $action == 'dele
 	// print out the styles in the table
 	$alternate = '';
 	if ( count( $styles ) ) {
-		foreach ( (array) $styles as $style ) { ?>
-			<tr class="<?php echo $alternate ?>">
-				<td><?php echo $style['style_id'] ?></td>
-				<td><a href="<?php echo wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=edit_view&style_id=".$style['style_id'] ), 'pbox-style-editview' ) ?>"><?php _e( 'Edit', 'pb' ) ?></a></td>
-				<td><a onclick="return confirm(' <?php echo __( 'Are you sure you want to delete this style?', 'pb' ) . "');\" href='" . wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=delete_process&style_id=".$style['style_id'] ), 'pbox-style-delete' ) . "'>" . __( 'Delete', 'pb' ) ?></a></td>
-			</tr>
-			<?php
-			if ( $alternate == '' ) {
+		foreach ( (array) $styles as $style ) { 
+			echo '
+			<tr class="', $alternate, '">
+				<td>', $style['style_id'], '</td>
+				<td><a href="', wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=edit_view&style_id=".$style['style_id'] ), 'pbox-style-editview' ), '">', _e( 'Edit', 'pb' ), '</a></td>
+				<td><a onclick="return confirm(\'', __( 'Are you sure you want to delete this style?', 'pb' ), '\');" href="', wp_nonce_url( PBox::get_admin_url( 'include_pbox_styles', "&amp;action=delete_process&style_id=".$style['style_id'] ), 'pbox-style-delete' ) , '">', __( 'Delete', 'pb' ), '</a></td>
+			</tr>';
+
+			if ( $alternate == '' )
 				$alternate = 'alternate';
-			} else {
+			else
 				$alternate = '';
-			}
 		}
 	}
 	?>

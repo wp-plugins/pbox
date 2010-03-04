@@ -2,8 +2,8 @@
 /**
 PBox
 Customizable content widgets able to display posts, pages, links and plain text in a custom style.
-2.2
-Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton
+2.3
+Authors: Aaron Berg, Dale Taylor, Nelson Lai, Yefei Tang, Xueyan Bai, Zafor Ahmed, Fran&ccedil;ois Fortin, Lindsay Newton, Nicholas Crawford
 http://www.bankofcanada.ca/
 */
 
@@ -125,9 +125,9 @@ if ( $action = $_REQUEST['action'] ) {
 
 				// Echo the items to be contained in the jQuery sortable class.?>
 				<li id='item_<?php echo $i ?>' class='lineitem'>
-					<img src='<?php echo PBox::get_base_url( 'move.gif' ) ?>' class='move' alt='Move this field' />
+					<img src='<?php echo PBox::get_base_url( 'images/move.gif' ) ?>' class='move' alt='Move this field' />
 					<a href="javascript:clearValue('<?php echo $i ?>')" >
-						<img src='<?php echo PBox::get_base_url( 'x.png' ) ?>' class='cancelButton' alt='Clear this field' />
+						<img src='<?php echo PBox::get_base_url( 'images/x.png' ) ?>' class='cancelButton' alt='Clear this field' />
 					</a>
 					<select id='type_<?php echo $i ?>' class='typeField' name='type_<?php echo $i ?>' onchange='item_content_prompt(<?php echo $i ?>)'>
 							<?php PBox::display_type_dropdown( $type_id ); ?>
@@ -218,10 +218,10 @@ if ( $action = $_REQUEST['action'] ) {
 			max = '<?php echo $max_field ?>';
 			new_id = Number( max ) + Number( id );
 			jQuery("#sortable").append("<li id='item_" + new_id + "' class='lineitem'>"+
-					"<img src='" + base_url + "move.gif' class='move' alt='Move this field' /> "+
-					"<a href=javascript:clearValue('" + new_id + "') ><img src='" + base_url + "x.png' class='cancelButton' alt='Clear this field' /></a> "+
+					"<img src='" + base_url + "images/move.gif' class='move' alt='Move this field' /> "+
+					"<a href=javascript:clearValue('" + new_id + "') ><img src='" + base_url + "images/x.png' class='cancelButton' alt='Clear this field' /></a> "+
 					"<select id='type_" + new_id + "' class='typeField' name='type_" + new_id + "' onchange='item_content_prompt(" + new_id + ")'>"+
-						"<option value='1'>link</option><option value='2'>page/post/file</option><option value='3' selected='selected'>text</option></select> "+
+						"<option value='1'>link</option><option value='2'>page/post/file</option><option value='3' selected='selected'>text</option><option value='4'>external content</option><option value='5'>image</option></select> "+
 					"<input type='text' name='content_" + new_id + "' id='content_" + new_id + "' value='' class='contentField' />"+
 					"<select id='callout_id_" + new_id + "' name='callout_id_" + new_id + "'  style='display:none;' class='calloutField'>"+
 						"<option value='0' selected='selected'>Item only</option>"+
