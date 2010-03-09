@@ -68,6 +68,18 @@ Select "PBox Styles" to add a style or customize existing styles.  Enter the nam
 
 Fill in the styling option text boxes as necessary, using the short codes provided at the top of the page.  If you run into any troubles, take a look at the options and CSS of any one of the three provided styles (Default-Style, Alert, and InfoByte).
 
+= How do I make a PBox like the example in "screenshots"? =
+
+Let's assume you're using WP 2.9.2 and have downloaded/installed/activated the plugin.
+
+On the left-hand navigation menu, look for "PBox", click the drop down, and then click "Manage PBoxes".  Then, in the top left, there is a section called "Create new presentation box". Enter a title (in the demo we used "PBox Demo") and click "Create".  You'll then be taken to a page where you can modify the PBox contents. The demo provided shows one "text" item and one "page" item.
+
+To do this, select "text" for the first row, and beside it, enter the text you wish to appear (in the demo, we used "You can have multiple types of items in your PBox!".  In the second row, select "page/post/file", and enter the ID of the page you wish to link to. For the demo, we also chose "item and excerpt" to have an excerpt of the page appear.  Now, click "Save Changes" at the bottom. (Note the ID of the PBox that was created.)
+
+Finally, go to your Widget manager and drag a "Presentation Box" widget onto your sidebar.  Enter the PBox ID, select a style (in the demo we used "Alert"), and click "Save".
+
+That's all!  When viewing your blog, you should now have a PBox similar to our example!
+
 == Changelog ==
 = 2.3 =
 * Fixed a bug that caused postmea key name change not to update from old versions
